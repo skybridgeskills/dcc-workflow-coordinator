@@ -1,3 +1,5 @@
+import AWS from 'aws-sdk';
+
 let CONFIG;
 const defaultPort = 4005
 const defaultTenantName = "test"
@@ -26,14 +28,34 @@ export function initializeConfig() {
   CONFIG = parseConfig();
 }
 
-function parseTenantTokens() {
+async function parseTenantTokens() {
   // first add default so it can be overridden by env
   TENANT_ACCESS_TOKENS[defaultTenantName] = defaultTenantToken
   // also add the 'random' tenant
   TENANT_ACCESS_TOKENS[randomTenantName] = randomTenantToken
+
   const allEnvVars = process.env;
+
+  // Check if AWS Secrets Manager secret name is provided
+  const awsSecretName = allEnvVars.AWS_SECRET;
+  if (awsSecretName) {
+    try {
+      const secretsManager = new AWS.SecretsManager();
+      const { SecretString } = await secretsManager.getSecretValue({ SecretId: awsSecretName }).promise();
+      const secretTokens = JSON.parse(SecretString);
+
+      // Merge AWS secrets with existing tokens
+      Object.assign(TENANT_ACCESS_TOKENS, secretTokens);
+      return;
+    } catch (error) {
+      console.error('Error loading tenant tokens from AWS Secrets Manager:', error);
+      // Fall back to environment variables if AWS Secrets Manager fails
+    }
+  }
+
+  // Original functionality - load from environment variables
   const tenantKeys = Object.getOwnPropertyNames(allEnvVars)
-    .filter(key => key.toUpperCase().startsWith('TENANT_TOKEN_')) 
+    .filter(key => key.toUpperCase().startsWith('TENANT_TOKEN_'))
   for(const key of tenantKeys) {
     let value = allEnvVars[key]
     const tenantName = key.slice(13).toLowerCase()
@@ -61,7 +83,7 @@ function parseConfig() {
 
 export function getConfig() {
   if (!CONFIG) {
-     initializeConfig()
+    initializeConfig()
   }
   return CONFIG;
 }
@@ -70,12 +92,12 @@ export function resetConfig() {
   CONFIG = null;
 }
 
-export function getTenantToken(tenantName) {
-  const lowerCasedName = tenantName.toLowerCase()
+export async function getTenantToken(tenantName) {
+    const lowerCasedName = tenantName.toLowerCase()
   if (! Object.keys(TENANT_ACCESS_TOKENS).length) {
-     parseTenantTokens()
+     await parseTenantTokens()
   }
- 
+
   if (TENANT_ACCESS_TOKENS.hasOwnProperty(lowerCasedName)) {
     return TENANT_ACCESS_TOKENS[lowerCasedName];
   } else {
