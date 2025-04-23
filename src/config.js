@@ -1,4 +1,4 @@
-import AWS from 'aws-sdk';
+import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 
 let CONFIG;
 const defaultPort = 4005
@@ -35,15 +35,16 @@ async function parseTenantTokens() {
   TENANT_ACCESS_TOKENS[randomTenantName] = randomTenantToken
 
   const allEnvVars = process.env;
-
+  
   // Check if AWS Secrets Manager secret name is provided
   const awsSecretName = allEnvVars.AWS_SECRET;
   if (awsSecretName) {
     try {
-      const secretsManager = new AWS.SecretsManager();
-      const { SecretString } = await secretsManager.getSecretValue({ SecretId: awsSecretName }).promise();
+      const client = new SecretsManagerClient();
+      const command = new GetSecretValueCommand({ SecretId: awsSecretName });
+      const { SecretString } = await client.send(command);
       const secretTokens = JSON.parse(SecretString);
-
+      
       // Merge AWS secrets with existing tokens
       Object.assign(TENANT_ACCESS_TOKENS, secretTokens);
       return;
@@ -55,13 +56,12 @@ async function parseTenantTokens() {
 
   // Original functionality - load from environment variables
   const tenantKeys = Object.getOwnPropertyNames(allEnvVars)
-    .filter(key => key.toUpperCase().startsWith('TENANT_TOKEN_'))
+    .filter(key => key.toUpperCase().startsWith('TENANT_TOKEN_')) 
   for(const key of tenantKeys) {
     let value = allEnvVars[key]
     const tenantName = key.slice(13).toLowerCase()
     TENANT_ACCESS_TOKENS[tenantName] = value
   }
-
 }
 
 
