@@ -1,5 +1,5 @@
 import { build } from './src/app.js'
-import { getConfig, initializeConfig } from "./src/config.js";
+import { getConfig, initializeConfig, loadSecrets } from "./src/config.js";
 import https from "https"
 import http from "http"
 import fs from "fs"
@@ -7,6 +7,7 @@ import logger from "./src/utils/logger.js";
 
 const run = async () => {
   await initializeConfig()
+  await loadSecrets()
   const { port, enableHttpsForDev } = getConfig();
 
   const app = await build();

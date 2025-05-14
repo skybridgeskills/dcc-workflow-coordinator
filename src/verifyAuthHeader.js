@@ -7,7 +7,7 @@ function AuthorizationException(code, message) {
 
 export default async function verifyAuthHeader(authHeader, tenantName) {
 
-    const tenantToken = getTenantToken(tenantName)
+    const tenantToken = await getTenantToken(tenantName)
     
     if (!tenantToken) {
         throw new AuthorizationException(404, "Tenant does not exist.")

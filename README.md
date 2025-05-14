@@ -411,6 +411,15 @@ Note that this sets a key for the default tenant, but you can set up as many ten
 
 ### Add Tenants
 
+If you store tenants in AWS Secrets Manger, set the secret name in AWS_SECRET. The value should be json. Here's an example:
+
+```json
+{
+  "example.com":"abc123supersecret",
+  "another.example.com":"yz123"
+}
+```
+
 You might want to allow more than one signing key/DID to be used with the issuer. For example, you might want to sign university/college degree diplomas with a DID that is only used by the registrar, but also allow certificates for individual courses to be signed by by different DIDS that are owned by the faculty or department or even the instructors that teach the courses.
 
 We're calling these differents signing authorities 'tenants'.  

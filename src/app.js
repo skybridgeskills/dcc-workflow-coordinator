@@ -7,7 +7,7 @@ import errorHandler from './middleware/errorHandler.js';
 import errorLogger from './middleware/errorLogger.js';
 import invalidPathHandler from './middleware/invalidPathHandler.js';
 import verifyAuthHeader from './verifyAuthHeader.js'
-import { getConfig } from './config.js'
+import { getConfig, loadSecrets } from './config.js'
 import testVC from './testVC.js';
 import CoordinatorException from './CoordinatorException.js';
 
@@ -111,6 +111,7 @@ export async function build(opts = {}) {
      */
     app.post('/exchange/setup',
         async (req, res, next) => {
+            console.log(req.headers)
             try {
                 const exchangeData = req.body;
                 // TODO: CHECK THE INCOMING DATA FOR CORRECTNESS HERE
@@ -233,6 +234,11 @@ export async function build(opts = {}) {
     app.get('/seedgen', async (req, res, next) => {
         const response = await axios.get(`http://${signingService}/seedgen`)
         return res.json(response.data)
+    });
+
+    app.get('/refresh-secrets', async (req, res, next) => {
+        await loadSecrets()
+        return res.json({status:200})
     });
 
     app.get('/did-key-generator', async (req, res, next) => {
