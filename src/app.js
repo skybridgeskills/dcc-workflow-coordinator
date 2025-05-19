@@ -185,6 +185,7 @@ export async function build(opts = {}) {
                     unSignedVC
                 // sign the credential
                 const signedVC = await callService(`http://${signingService}/instance/${tenantName.toLowerCase()}/credentials/sign`, vcReadyToSign)
+                // TODO: phone home with identifier
                 return res.json(signedVC)
 
             } catch (error) {
