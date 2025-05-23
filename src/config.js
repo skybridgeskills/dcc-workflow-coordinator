@@ -84,7 +84,7 @@ export async function loadSecrets() {
 
       // console.log(secretData)
       // Use the secret name as the key and the seed as the value
-      if (secretData.seed) {
+      if (secretData.token) {
         TENANT_ACCESS_TOKENS[secret.Name] = secretData.token;
         console.log(`Successfully loaded secret: ${secret.Name}`);
       } else {
