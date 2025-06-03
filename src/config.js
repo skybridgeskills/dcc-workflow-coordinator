@@ -63,15 +63,26 @@ export async function loadSecrets() {
   const client = new SecretsManagerClient();
 
   // List all secrets with the specified prefix
-  const listCommand = new ListSecretsCommand({
-    Filters: [
-      {
-        Key: 'name',
-        Values: ['tenant']
-      }
-    ]
-  });
-  const { SecretList } = await client.send(listCommand);
+  let NextToken = 'INITIAL';
+  let SecretList = [];
+
+  while (NextToken) {
+    NextToken = NextToken === 'INITIAL' ? undefined : NextToken;
+    const listCommand = new ListSecretsCommand({
+      Filters: [
+        {
+          Key: 'name',
+          Values: ['tenant']
+        }
+      ],
+      MaxResults: 100,
+      NextToken
+    });
+    const result = await client.send(listCommand);
+    NextToken = result.NextToken;
+    SecretList = [...SecretList, ...(result.SecretList || [])];
+  }
+
 
   console.log(`Found ${SecretList?.length || 0} secrets matching prefix tenant`);
 
