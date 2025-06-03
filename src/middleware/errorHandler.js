@@ -27,7 +27,7 @@ const errorHandler = (error, request, response, next) => {
     errorResponse = error
   }
   response.header('Content-Type', 'application/json')
-  response.status(errorResponse.code).json(errorResponse)
+  response.status(errorResponse.code || 500).json(errorResponse)
 }
 
 export default errorHandler
