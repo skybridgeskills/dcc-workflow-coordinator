@@ -38,7 +38,7 @@ async function parseTenantTokens() {
 
   // Check if AWS Secrets Manager secret name is provided
   const awsSecretName = allEnvVars.AWS_SECRET;
-  if (awsSecretName) {
+  if (awsSecretName && process.env.NODE_ENV !== 'test') {
     console.log("Using AWS Secret Manager")
     try {
       loadSecrets();
@@ -144,6 +144,8 @@ export async function getTenantToken(tenantName) {
 
   if (TENANT_ACCESS_TOKENS.hasOwnProperty(tenantKey)) {
     return TENANT_ACCESS_TOKENS[tenantKey];
+  } else if (TENANT_ACCESS_TOKENS.hasOwnProperty(tenantName?.toLowerCase())) {
+    return TENANT_ACCESS_TOKENS[tenantName?.toLowerCase()]
   } else {
     return null
   }
