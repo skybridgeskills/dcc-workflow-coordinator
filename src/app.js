@@ -203,6 +203,7 @@ export async function build(opts = {}) {
                 const response = await axios.post(transactionEndpoint, didAuth);
                 const { data } = response
                 const { tenantName, vc: unSignedVC } = data
+                console.log(unSignedVC)
                 unSignedVC.credentialSubject.id = didAuth.holder
 
                 // add credential status if enabled
