@@ -111,12 +111,14 @@ export async function build(opts = {}) {
      */
     app.post('/exchange/setup',
         async (req, res, next) => {
-            console.log(req.headers)
             try {
                 const exchangeData = req.body;
                 // TODO: CHECK THE INCOMING DATA FOR CORRECTNESS HERE
-                if (!exchangeData || !Object.keys(exchangeData).length) throw new CoordinatorException(400, 'You must provide data for the exchange. Check the README for details.') 
-                exchangeData.exchangeHost = exchangeHost
+                if (!exchangeData || !Object.keys(exchangeData).length) {
+                    throw new CoordinatorException(
+                        400, 'You must provide data for the exchange. Check the README for details.') 
+                }
+                exchangeData.exchangeHost = exchangeHost // This uses the default exchange host
 
                 await verifyAuthHeader(req.headers.authorization, exchangeData.tenantName)
 
@@ -126,6 +128,31 @@ export async function build(opts = {}) {
             } catch (error) {
                 // catch async errors and forward error handling
                 // middleware
+                next(error)
+            }
+        })
+
+    /**
+     * 2025 variant of VC-API create exchange endpoint
+     * Follows https://w3c-ccg.github.io/vc-api/#create-exchange
+     */
+    app.post('/workflows/:tenantId/exchanges',
+        async (req, res, next) => {
+            try {
+                const tenantId = req.params.tenantId // In the future, we might support multiple workflows per tenant
+                await verifyAuthHeader(req.headers.authorization, tenantId)
+
+                const exchangeData = req.body
+
+                // TODO: validate exchangeHost for this workflow/tenant.
+                // e.g. it may be their domain for this service or their domain for admin-dashboard.
+                // In dev, it might be an internet-exposed endpoint like w/ngrok or localtunnel.
+                exchangeData.exchangeHost = exchangeData.exchangeHost ?? exchangeHost
+                exchangeData.tenantName = tenantId
+
+                const walletQuerys = await callService(`http://${transactionService}/exchange`, exchangeData)
+                return res.json(walletQuerys)
+            } catch (error) {
                 next(error)
             }
         })
